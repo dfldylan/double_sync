@@ -90,7 +90,9 @@ document.addEventListener("mouseover", function (e) {
 
 window.addEventListener('scroll', function (e) {
   if (pointer_clone.style.display == "none") {
-    chrome.runtime.sendMessage({ event: "scroll", url: window.location.href, scrolly: window.scrollY });
+    let elementUnderMouse = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2); // 假设鼠标在屏幕中心
+    let x_path = getXPath(elementUnderMouse);
+    chrome.runtime.sendMessage({ event: "scroll", url: window.location.href, xpath: x_path });
   }
 });
 
@@ -99,11 +101,19 @@ window.addEventListener('mousemove', function (e) {
   chrome.runtime.sendMessage({ event: "mousemove", url: window.location.href, client_x: e.clientX, client_y: e.clientY });
 });
 
+function scrollToCenter(element) {
+  const rect = element.getBoundingClientRect();
+  const center = rect.top + rect.height / 2;
+  const offset = center - window.innerHeight / 2;
+  console.log("Scrolling to center of element:", element, "Calculated offset:", offset);
+  window.scrollTo(0, window.scrollY + offset);
+}
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     pointer_clone.style.display = "block";
     if (request.event == "scroll") {
-      window.scrollTo(0, request.scrolly);
+      const element = getElementByXpath(request.xpath); // 使用您现有的getElementByXpath函数
+      scrollToCenter(element); // 使用新的scrollToCenter函数
     } else if (request.event == "mousemove") {
       pointer_clone.style.left = "" + request.client_x + "px";
       pointer_clone.style.top = "" + request.client_y + "px";
