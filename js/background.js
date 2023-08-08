@@ -31,7 +31,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 
     chrome.windows.getLastFocused({populate: false}, function(currentWindow) {
       let new_width = parseInt(currentWindow.width/2);
-      chrome.windows.update(currentWindow.id, { top:currentWindow.top, left:0, width: new_width, state: "normal" }, function(){
+      chrome.windows.update(currentWindow.id, { top:currentWindow.top, left:currentWindow.left, width: new_width, state: "normal" }, function(){
         chrome.windows.create({focused:false, url: tab.url, width: new_width, left: currentWindow.left+new_width });
       });
     });
