@@ -81,7 +81,7 @@ document.addEventListener('click', function (e) {
 
 document.addEventListener("mouseover", function (e) {
   let t = e.target;
-  console.log("hover element", t.nodeName);
+  // console.log("hover element", t.nodeName);
   let x_path = getXPath(t);
   if (t.nodeName !== "TABLE" && t.nodeName !== "HTML" && t.nodeName !== "BODY" && t.nodeName !== "IMG") {
     chrome.runtime.sendMessage({ event: "mouseover", url: window.location.href, xpath: x_path });
@@ -90,9 +90,12 @@ document.addEventListener("mouseover", function (e) {
 
 window.addEventListener('scroll', function (e) {
   if (pointer_clone.style.display == "none") {
-    let elementUnderMouse = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2); // 假设鼠标在屏幕中心
-    let x_path = getXPath(elementUnderMouse);
-    chrome.runtime.sendMessage({ event: "scroll", url: window.location.href, xpath: x_path });
+    let t = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2); // 假设鼠标在屏幕中心
+    let rect = t.getBoundingClientRect();
+    let offset = rect.top + rect.height / 2;
+    let x_path = getXPath(t);
+    console.log("Offset:", offset, "NodeName", t.nodeName);
+    chrome.runtime.sendMessage({ event: "scroll", url: window.location.href, xpath: x_path, offset: offset });
   }
 });
 
@@ -101,11 +104,10 @@ window.addEventListener('mousemove', function (e) {
   chrome.runtime.sendMessage({ event: "mousemove", url: window.location.href, client_x: e.clientX, client_y: e.clientY });
 });
 
-function scrollToCenter(element) {
+function scrollTo(element, offset0) {
   const rect = element.getBoundingClientRect();
-  const center = rect.top + rect.height / 2;
-  const offset = center - window.innerHeight / 2;
-  console.log("Scrolling to center of element:", element, "Calculated offset:", offset);
+  const offset = offset0 - (rect.top + rect.height / 2);
+  console.log("Scrolling to center of element:", element, "scrollTo:", window.scrollY + offset);
   window.scrollTo(0, window.scrollY + offset);
 }
 chrome.runtime.onMessage.addListener(
@@ -113,7 +115,7 @@ chrome.runtime.onMessage.addListener(
     pointer_clone.style.display = "block";
     if (request.event == "scroll") {
       const element = getElementByXpath(request.xpath); // 使用您现有的getElementByXpath函数
-      scrollToCenter(element); // 使用新的scrollToCenter函数
+      scrollTo(element, request.offset);
     } else if (request.event == "mousemove") {
       pointer_clone.style.left = "" + request.client_x + "px";
       pointer_clone.style.top = "" + request.client_y + "px";
